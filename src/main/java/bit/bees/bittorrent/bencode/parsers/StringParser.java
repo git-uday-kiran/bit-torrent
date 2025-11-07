@@ -41,7 +41,12 @@ public class StringParser implements BencodeParser {
         if (!isParsable(data)) {
             throw new BencodeException("Date '" + data + "' is not parsable");
         }
-        return "";
+        int colonIndex = data.indexOf(':');
+        String lengthString = data.substring(0, colonIndex);
+        BigInteger length = getAsNumber(lengthString).orElse(BigInteger.ZERO);
+
+        int stringStartIndex = colonIndex + 1;
+        return data.substring(stringStartIndex, stringStartIndex + length.intValue());
     }
 
 }
