@@ -1,9 +1,9 @@
 package bit.bees.bittorrent.bencode.parsers;
 
-public interface BencodeParser {
+public interface BencodeParser<T> {
 
     boolean isParsable(String data);
 
-    String parse(String data);
+    T parse(String data);
 
 }
