@@ -23,16 +23,23 @@ public class StringParser implements BencodeParser<String> {
             int colonIndex = data.indexOf(':');
             if (colonIndex > 0) {
                 var possibleNumberString = data.substring(0, colonIndex);
-                var lengthOpt = getAsNumber(possibleNumberString);
-                if (lengthOpt.isPresent()) {
-                    BigInteger stringLength = lengthOpt.get();
-                    isParsable = (data.length() - colonIndex - 1) >= stringLength.intValue();
+                if (isValidNumberPrefix(possibleNumberString)) {
+                    var lengthOpt = getAsNumber(possibleNumberString);
+                    if (lengthOpt.isPresent()) {
+                        int stringLength = lengthOpt.get().intValue();
+                        isParsable = (stringLength >= 0) && ((data.length() - colonIndex - 1) >= stringLength);
+                    }
                 }
             }
         }
 
         log.info("'{}' is parsable: {}", data, isParsable);
         return isParsable;
+    }
+
+    private static boolean isValidNumberPrefix(String possibleNumberString) {
+        return possibleNumberString.equals("0")
+                || possibleNumberString.matches("^[1-9].*");
     }
 
     @Override
