@@ -38,7 +38,7 @@ public class StringParser implements BencodeParser<String> {
     @Override
     public String parse(String data) {
         if (!isParsable(data)) {
-            throw new BencodeException("%s is not parsable".formatted(data));
+            throw new BencodeException("'%s' is not parsable".formatted(data));
         }
         int colonIndex = data.indexOf(':');
         var lengthString = data.substring(0, colonIndex);

@@ -19,9 +19,10 @@ public class NumberParser implements BencodeParser<BigInteger> {
 
         if (data != null && data.startsWith("i")) {
             int numberEndIndex = data.indexOf('e') - 1;
-            if (numberEndIndex >= 1) {
+            if (numberEndIndex >= 0) {
                 int numberStartIndex = 1;
                 var numberString = data.substring(numberStartIndex, numberEndIndex + 1);
+                System.out.println("numberString = " + numberString);
                 isParsable = isValidNumber(numberString);
             }
         }
@@ -46,7 +47,7 @@ public class NumberParser implements BencodeParser<BigInteger> {
     @Override
     public BigInteger parse(String data) {
         if (!isParsable(data)) {
-            throw new BencodeException("%s is not parsable".formatted(data));
+            throw new BencodeException("'%s' is not parsable".formatted(data));
         }
         String numberString = data.substring(1, data.indexOf('e'));
         return ParserUtil.getAsNumber(numberString).orElseThrow();
