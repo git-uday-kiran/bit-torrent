@@ -47,5 +47,4 @@ public class StringParser implements BencodeParser<String> {
         int stringStartIndex = colonIndex + 1;
         return data.substring(stringStartIndex, stringStartIndex + length.intValue());
     }
-
 }
