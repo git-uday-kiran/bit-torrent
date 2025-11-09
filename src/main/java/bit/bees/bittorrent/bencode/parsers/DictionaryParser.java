@@ -16,8 +16,8 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
     private static final char PREFIX = 'd';
     private static final char SUFFIX = 'e';
 
-    private static final List<BencodeParser<String>> keyParsers = List.of(new StringParser());
-    private static final List<BencodeParser<?>> valueParsers = List.of(
+    private static final List<BencodeParser<?>> keyParsers = java.util.List.of(new StringParser());
+    private static final List<BencodeParser<?>> valueParsers = java.util.List.of(
             new ListParser(),
             new NumberParser(),
             new StringParser(),
@@ -38,7 +38,7 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
             boolean keysInOrder = true;
 
             while ((result = tryToParse(data, keyValuePairStartIndex)).isSuccess()) {
-                String parsedKey = result.keyResult.parsedData();
+                String parsedKey = String.valueOf(result.keyResult.parsedData());
                 if (lastKey.compareTo(parsedKey) > 0) {
                     keysInOrder = false;
                     log.info("Keys are not in lexicographic order: last key = '{}', current key = '{}'", lastKey, parsedKey);
@@ -65,14 +65,13 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
             return KeyValueParseResult.failure(data, new BencodeException("Invalid key pair starting index provided"));
         }
 
-        int keyStartIndex = keyValuePairStartIdx;
-        var keyResult = tryToParseKey(data, keyStartIndex);
+        var keyResult = parseKeyOrValue(data, keyValuePairStartIdx, keyParsers);
         if (keyResult.status() == ParseResult.Status.FAILURE) {
             return KeyValueParseResult.failure(data, new BencodeException("Failed parsing key", keyResult.error()));
         }
 
         int valueStartIndex = keyValuePairStartIdx + keyResult.parsedLength();
-        var valueResult = tryToParseValue(data, valueStartIndex);
+        var valueResult = parseKeyOrValue(data, valueStartIndex, valueParsers);
         if (valueResult.status() == ParseResult.Status.FAILURE) {
             return KeyValueParseResult.failure(data, new BencodeException("Failed parsing value", valueResult.error()));
         }
@@ -80,21 +79,10 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
         return KeyValueParseResult.success(data, keyResult, valueResult);
     }
 
-    private ParseResult<String> tryToParseKey(String data, int keyStartIndex) {
+    private static ParseResult<?> parseKeyOrValue(String data, int keyStartIndex, List<BencodeParser<?>> parsers) {
         String inputData = data.substring(keyStartIndex);
-        for (var keyParser : keyParsers) {
+        for (var keyParser : parsers) {
             var result = keyParser.parse(inputData);
-            if (result.status() == ParseResult.Status.SUCCESS) {
-                return result;
-            }
-        }
-        return ParseResult.failure(inputData, new BencodeException("Not parsable by available parsers"));
-    }
-
-    private ParseResult<?> tryToParseValue(String data, int valueStartIndex) {
-        String inputData = data.substring(valueStartIndex);
-        for (var valueParser : valueParsers) {
-            var result = valueParser.parse(inputData);
             if (result.status() == ParseResult.Status.SUCCESS) {
                 return result;
             }
@@ -114,7 +102,9 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
 
         int parsedLength = 2;
         while ((result = tryToParse(data, keyValuePairStartIndex)).isSuccess()) {
-            keyValues.put(result.keyResult.parsedData(), result.valueResult.parsedData());
+            String key = String.valueOf(result.keyResult.parsedData());
+            Object values = result.valueResult.parsedData();
+            keyValues.put(key, values);
             parsedLength += result.parsedLength();
             keyValuePairStartIndex = keyValuePairStartIndex + result.parsedLength();
         }
@@ -123,7 +113,7 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
 
     private record KeyValueParseResult(
             String data,
-            ParseResult<String> keyResult,
+            ParseResult<?> keyResult,
             ParseResult<?> valueResult,
             int parsedLength,
             Throwable error) {
@@ -134,7 +124,7 @@ public class DictionaryParser implements BencodeParser<Map<String, Object>> {
                     && valueResult.status() == ParseResult.Status.SUCCESS;
         }
 
-        static KeyValueParseResult success(String data, ParseResult<String> keyResult, ParseResult<?> valueResult) {
+        static KeyValueParseResult success(String data, ParseResult<?> keyResult, ParseResult<?> valueResult) {
             return new KeyValueParseResult(
                     data,
                     keyResult,
