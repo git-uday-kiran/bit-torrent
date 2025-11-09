@@ -24,21 +24,10 @@ public class ListParser implements BencodeParser<List<Object>> {
 
         if (data != null && !data.isBlank() && data.startsWith(String.valueOf(PREFIX))) {
             int itemStartIndex = 1;
+            ParseResult<?> result;
 
-            while (!isEndOfTheList(data, itemStartIndex)) {
-                boolean anythingParsable = false;
-                for (BencodeParser<?> parser : parsers) {
-                    var result = parser.parse(data.substring(itemStartIndex));
-                    if (result.status() == ParseResult.Status.SUCCESS) {
-                        itemStartIndex = (itemStartIndex + result.parsedLength());
-                        anythingParsable = true;
-                        break;
-                    }
-                }
-
-                if (!anythingParsable) {
-                    break;
-                }
+            while ((result = tryToParse(data, itemStartIndex)).status() == ParseResult.Status.SUCCESS) {
+                itemStartIndex = (itemStartIndex + result.parsedLength());
             }
 
             // If next item start index is the actual end position of the list. i.e, char at index is 'e'
@@ -51,6 +40,19 @@ public class ListParser implements BencodeParser<List<Object>> {
         return isParsable;
     }
 
+    ParseResult<?> tryToParse(String data, int itemStartIndex) {
+        if (itemStartIndex >= data.length()) {
+            return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
+        }
+        for (BencodeParser<?> parser : parsers) {
+            var result = parser.parse(data.substring(itemStartIndex));
+            if (result.status() == ParseResult.Status.SUCCESS) {
+                return result;
+            }
+        }
+        return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
+    }
+
 
     @Override
     public ParseResult<List<Object>> parse(String data) {
@@ -59,24 +61,13 @@ public class ListParser implements BencodeParser<List<Object>> {
             return ParseResult.failure(data, error);
         }
 
+        int itemStartIndex = 1;
+        ParseResult<?> result;
         List<Object> items = new ArrayList<>();
 
-        int itemStartIndex = 1;
-        while (!isEndOfTheList(data, itemStartIndex)) {
-            boolean anythingParsable = false;
-            for (BencodeParser<?> parser : parsers) {
-                var result = parser.parse(data.substring(itemStartIndex));
-                if (result.status() == ParseResult.Status.SUCCESS) {
-                    items.add(result.parsedData());
-                    itemStartIndex = (itemStartIndex + result.parsedLength());
-                    anythingParsable = true;
-                    break;
-                }
-            }
-
-            if (!anythingParsable) {
-                break;
-            }
+        while ((result = tryToParse(data, itemStartIndex)).status() == ParseResult.Status.SUCCESS) {
+            items.add(result.parsedData());
+            itemStartIndex = (itemStartIndex + result.parsedLength());
         }
 
         int listEndIndex = (itemStartIndex - 1);
