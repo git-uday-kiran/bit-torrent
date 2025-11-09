@@ -16,7 +16,7 @@ public class StringParser implements BencodeParser<String> {
 
     @Override
     public boolean isParsable(String data) {
-        log.debug("Checking if data is isParsable as string: '{}'", data);
+        log.debug("Checking if parsedData is isParsable as string: '{}'", data);
         boolean isParsable = false;
 
         if (data != null && !data.isEmpty()) {
@@ -43,15 +43,22 @@ public class StringParser implements BencodeParser<String> {
     }
 
     @Override
-    public String parse(String data) {
+    public ParseResult<String> parse(String data) {
         if (!isParsable(data)) {
-            throw new BencodeException("'%s' is not parsable".formatted(data));
+            BencodeException error = new BencodeException("'%s' is not parsable".formatted(data));
+            return ParseResult.failure(data, error);
         }
+
         int colonIndex = data.indexOf(':');
         var lengthString = data.substring(0, colonIndex);
         var length = getAsNumber(lengthString).orElse(BigInteger.ZERO);
 
         int stringStartIndex = colonIndex + 1;
-        return data.substring(stringStartIndex, stringStartIndex + length.intValue());
+        int stringEndIndex = stringStartIndex + length.intValue() - 1;
+
+        String parsedData = data.substring(stringStartIndex, stringEndIndex + 1);
+        int parsedLength = (stringEndIndex + 1);
+
+        return ParseResult.success(data, parsedData, parsedLength);
     }
 }

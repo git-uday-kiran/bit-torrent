@@ -45,11 +45,19 @@ public class NumberParser implements BencodeParser<BigInteger> {
     }
 
     @Override
-    public BigInteger parse(String data) {
+    public ParseResult<BigInteger> parse(String data) {
         if (!isParsable(data)) {
-            throw new BencodeException("'%s' is not parsable".formatted(data));
+            var error = new BencodeException("'%s' is not parsable".formatted(data));
+            return ParseResult.failure(data, error);
         }
+
+        int numberStartIndex = 1;
+        int numberEndIndex = data.indexOf('e', numberStartIndex) - 1;
+        int parsedLength = (numberEndIndex + 2);
+
         String numberString = data.substring(1, data.indexOf('e'));
-        return ParserUtil.getAsNumber(numberString).orElseThrow();
+        BigInteger parsedData = ParserUtil.getAsNumber(numberString).orElseThrow();
+
+        return ParseResult.success(data, parsedData, parsedLength);
     }
 }

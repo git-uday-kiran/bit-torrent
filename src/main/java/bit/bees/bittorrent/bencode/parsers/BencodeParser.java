@@ -4,6 +4,6 @@ public interface BencodeParser<T> {
 
     boolean isParsable(String data);
 
-    T parse(String data);
+    ParseResult<T> parse(String data);
 
 }
