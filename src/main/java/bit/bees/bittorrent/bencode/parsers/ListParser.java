@@ -40,7 +40,7 @@ public class ListParser implements BencodeParser<List<Object>> {
         return isParsable;
     }
 
-    ParseResult<?> tryToParse(String data, int itemStartIndex) {
+    private ParseResult<?> tryToParse(String data, int itemStartIndex) {
         if (itemStartIndex >= data.length()) {
             return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
         }
@@ -52,7 +52,6 @@ public class ListParser implements BencodeParser<List<Object>> {
         }
         return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
     }
-
 
     @Override
     public ParseResult<List<Object>> parse(String data) {
