@@ -22,7 +22,6 @@ public class NumberParser implements BencodeParser<BigInteger> {
             if (numberEndIndex >= 0) {
                 int numberStartIndex = 1;
                 var numberString = data.substring(numberStartIndex, numberEndIndex + 1);
-                System.out.println("numberString = " + numberString);
                 isParsable = isValidNumber(numberString);
             }
         }
