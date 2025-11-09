@@ -26,7 +26,7 @@ public class NumberParser implements BencodeParser<BigInteger> {
             }
         }
 
-        log.info("'{}' is parsable: {}", data, isParsable);
+        log.info("'{}' is{} parsable", data, (isParsable ? "" : " not"));
         return isParsable;
     }
 

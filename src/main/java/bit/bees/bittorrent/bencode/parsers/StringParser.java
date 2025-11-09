@@ -16,7 +16,7 @@ public class StringParser implements BencodeParser<String> {
 
     @Override
     public boolean isParsable(String data) {
-        log.debug("Checking if parsedData is isParsable as string: '{}'", data);
+        log.debug("Checking if '{}' is parsable as string", data);
         boolean isParsable = false;
 
         if (data != null && !data.isEmpty()) {
@@ -33,7 +33,7 @@ public class StringParser implements BencodeParser<String> {
             }
         }
 
-        log.info("'{}' is parsable: {}", data, isParsable);
+        log.info("'{}' is{} parsable", data, (isParsable ? "" : " not"));
         return isParsable;
     }
 

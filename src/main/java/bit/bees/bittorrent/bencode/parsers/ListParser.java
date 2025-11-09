@@ -3,12 +3,12 @@ package bit.bees.bittorrent.bencode.parsers;
 import bit.bees.bittorrent.bencode.BencodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Component
 public class ListParser implements BencodeParser<List<Object>> {
 
     private static final Logger log = LoggerFactory.getLogger(ListParser.class);
@@ -36,21 +36,22 @@ public class ListParser implements BencodeParser<List<Object>> {
             }
         }
 
-        log.info("'{}' is {} parsable", data, (isParsable ? "" : "not"));
+        log.info("'{}' is{} parsable", data, (isParsable ? "" : " not"));
         return isParsable;
     }
 
     private ParseResult<?> tryToParse(String data, int itemStartIndex) {
         if (itemStartIndex >= data.length()) {
-            return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
+            return ParseResult.failure(data, new BencodeException("Invalid starting index in the given data"));
         }
+        String inputData = data.substring(itemStartIndex);
         for (BencodeParser<?> parser : parsers) {
-            var result = parser.parse(data.substring(itemStartIndex));
+            var result = parser.parse(inputData);
             if (result.status() == ParseResult.Status.SUCCESS) {
                 return result;
             }
         }
-        return ParseResult.failure(data, new BencodeException("No parser found for '" + data + "'"));
+        return ParseResult.failure(inputData, new BencodeException("Not parsable by available parsers"));
     }
 
     @Override
